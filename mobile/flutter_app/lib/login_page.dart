@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'main_navigation.dart';
 import 'checker_background.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
+
+  void showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +43,28 @@ class LoginPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MainNavigation(),
-                        ),
+                    onPressed: () async{
+                      final response = await http.post(
+                        Uri.parse('http://127.0.0.1:8000/auth/login'),
+                        headers:{
+                          'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: {
+                          'username': email.text,
+                          'password': password.text,
+                        },
                       );
+
+                      if(response.statusCode == 200){
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => MainNavigation()),
+                        );
+                      }
+
+                      else{
+                        showError(context, 'Invalid email or password');
+                      }            
                     },
                     child: const Padding(
                       padding: EdgeInsets.symmetric(vertical: 14),
